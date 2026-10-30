@@ -1,0 +1,17 @@
+{
+  "placeholder_format": "{LABEL}_{N}",
+  "detectors": {
+    "uuid": false,
+    "phone": false
+  },
+  "terms": [
+    { "value": "Acme Corp", "label": "COMPANY" },
+    { "value": "Project Falcon", "label": "PROJECT" }
+  ],
+  "terms_files": ["words.txt"],
+  "patterns": [
+    { "regex": "EMP-\\d{6}", "label": "EMPLOYEE_ID" }
+  ],
+  "internal_domains": ["acme.com", "acme.lan"],
+  "allow": ["127.0.0.1", "0.0.0.0", "localhost"]
+}

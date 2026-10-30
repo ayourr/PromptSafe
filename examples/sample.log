@@ -1,0 +1,11 @@
+2026-10-30T10:12:01Z INFO  sshd[2211]: Accepted password for johndoe from 192.168.10.45 port 52144 ssh2
+2026-10-30T10:12:03Z WARN  api-gw: upstream 10.0.3.17:8443 timeout, client=203.0.113.9 user=alice.martin@acme.com
+2026-10-30T10:12:04Z DEBUG db: connecting postgres://svc_app:Sup3rS3cret!@db01.acme.lan:5432/orders
+2026-10-30T10:12:05Z DEBUG config loaded: {"api_key": "AKIAIOSFODNN7EXAMPLE", "password": "hunter2!x", "region": "eu-west-3"}
+2026-10-30T10:12:06Z INFO  GET /v1/orders Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U
+2026-10-30T10:12:07Z ERROR worker: retry with token ghp_aB3dE5gH7jK9mN1pQ3sT5vX7zA9cE1gH3jK5 failed
+2026-10-30T10:12:08Z INFO  mac=3c:22:fb:9a:11:0e ipv6=fe80::1ff:fe23:4567:890a host=build-07.corp
+2026-10-30T10:12:09Z INFO  reading /home/johndoe/.aws/credentials and C:\Users\jdoe\Documents\report.xlsx
+2026-10-30T10:12:10Z WARN  payment declined card=4111 1111 1111 1111 for Acme Corp, Project Falcon
+2026-10-30T10:12:11Z INFO  later the same password hunter2!x was used again from 192.168.10.45
+2026-10-30T10:12:12Z INFO  version 2.4.1 build 7f3c9a2 took 245ms, sha256=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
