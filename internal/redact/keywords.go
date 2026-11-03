@@ -38,6 +38,8 @@ var notSecretValues = map[string]bool{
 	"sasl": true, "plain": true, "password": true, "anonymous": true,
 }
 
+var winPathRe = regexp.MustCompile(`^[A-Za-z]:\\`)
+
 var identRe = regexp.MustCompile(`[A-Za-z][A-Za-z0-9_.-]*`)
 
 // keywordDetector finds values written after a keyword: "sec: x",
@@ -210,6 +212,10 @@ func checkValue(text string, s, e int, kw, label string, spaceOnly bool) (Hit, b
 	// "Cookie: sessionid=abc": the value is itself name=value; the inner
 	// key is handled on its own, so keep the name visible.
 	if i := strings.IndexByte(v, '='); i > 0 && strings.Trim(v[i:], "=") != "" {
+		return Hit{}, false
+	}
+	// sudo "PWD=/tmp", shell "OLDPWD=~/src": a working directory, not a password.
+	if kw == "pwd" && (strings.HasPrefix(v, "/") || strings.HasPrefix(v, "~") || winPathRe.MatchString(v)) {
 		return Hit{}, false
 	}
 	if v == "" || notSecretValues[strings.ToLower(v)] {
