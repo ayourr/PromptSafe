@@ -31,10 +31,6 @@ on Windows). You can also download the file for your system from the
 [Releases page](https://github.com/ayourr/PromptSafe/releases/latest) and run it
 directly; on Linux, `chmod +x` it first.
 
-To publish a new release, push a version tag (`git tag v0.3.0 && git push origin v0.3.0`)
-or open **Actions > release > Run workflow** on GitHub and type the version.
-The workflow tests, builds and uploads the binaries.
-
 ## Quick start
 
 ```sh
