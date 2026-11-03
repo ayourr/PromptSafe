@@ -290,11 +290,16 @@ func looksRandom(s string) bool {
 	if digits < 2 || letters < 2 {
 		return false
 	}
+	if k8sPodRe.MatchString(s) {
+		return false // Kubernetes pod names: deploy-<replicaset hash>-<id>
+	}
 	if uuidRe.MatchString(s) {
 		return false // request/trace IDs like req-<uuid>; see the uuid detector
 	}
 	return entropy(s) >= 3.7
 }
+
+var k8sPodRe = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*-[bcdfghjklmnpqrstvwxz2456789]{6,10}-[bcdfghjklmnpqrstvwxz2456789]{5}$`)
 
 var uuidRe = regexp.MustCompile(`(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
 

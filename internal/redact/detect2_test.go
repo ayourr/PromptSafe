@@ -122,9 +122,25 @@ func TestNames(t *testing.T) {
 	}
 }
 
-func TestEntropySkipsRequestIDs(t *testing.T) {
-	in := "req-3f2b8c1e-9a4d-4e2b-8f1a-0c9d8e7f6a5b done"
-	if got := mustRedact(t, nil, in).Output; got != in {
-		t.Errorf("got %q", got)
+func TestEntropySkipsIDs(t *testing.T) {
+	for _, in := range []string{
+		"req-3f2b8c1e-9a4d-4e2b-8f1a-0c9d8e7f6a5b done",
+		"pod payments-api-7d9f8b6c5-x2kzq restarted",
+	} {
+		if got := mustRedact(t, nil, in).Output; got != in {
+			t.Errorf("got %q", got)
+		}
+	}
+}
+
+func TestPlaceholderIsNotKeyword(t *testing.T) {
+	for _, in := range []string{
+		`"GET /cb?access_token=ya29.a0AfB_byC3x9Qm2LpT7 HTTP/1.1" 200`,
+		`"POST /login;jsessionid=8F3A2B1C9D0E7F6A HTTP/1.1" 302`,
+	} {
+		res := mustRedact(t, nil, in)
+		if !res.Safe() || !strings.Contains(res.Output, " HTTP/1.1") {
+			t.Errorf("%q -> %q leaks=%+v", in, res.Output, res.Leaks)
+		}
 	}
 }

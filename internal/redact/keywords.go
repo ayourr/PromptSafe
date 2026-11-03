@@ -133,6 +133,9 @@ func findKeywordValues(text string, set map[string]bool, label string, anyNumber
 		}
 		key := strings.TrimRight(text[ks:ke], ".-")
 		ke = ks + len(key)
+		if genericPlaceholder.MatchString(key) {
+			continue // "SECRET_1 HTTP/1.1": a placeholder is not a keyword
+		}
 		kw := matchKeyword(key, set)
 		if kw == "" {
 			continue
