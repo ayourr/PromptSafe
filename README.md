@@ -165,3 +165,7 @@ lists, not an AI model. What that means in practice:
 
 Put anything specific to your organisation in `words.txt`, `keywords` or
 `patterns`, and run `check` on the output when in doubt.
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
