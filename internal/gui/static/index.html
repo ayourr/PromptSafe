@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PromptSafe</title>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--text:#1d2330;--muted:#667085;--border:#d9dee7;--accent:#2f6fec;--ok:#14804a;--okbg:#e7f6ee;--bad:#b42318;--badbg:#fdecea;--chip:#eef2fa}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--panel:#1a1f27;--text:#e6e9ef;--muted:#98a2b3;--border:#2c3440;--accent:#5b8cff;--ok:#4cc38a;--okbg:#14301f;--bad:#ff7b72;--badbg:#3a1714;--chip:#232b38}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--panel)}
+header h1{font-size:17px;margin:0}
+header .ver{color:var(--muted);font-size:12px}
+header .sp{flex:1}
+.tabs button{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 14px;cursor:pointer}
+.tabs button:first-child{border-radius:6px 0 0 6px}.tabs button:last-child{border-radius:0 6px 6px 0}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+main{display:grid;grid-template-columns:280px 1fr;gap:16px;padding:16px 20px;height:calc(100vh - 58px)}
+aside,.pane{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;overflow:auto}
+aside h2,.pane h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
+aside section{margin-bottom:18px}
+textarea,input[type=text]{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px;font:13px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace}
+textarea{resize:vertical}
+#terms{height:130px}
+label.det{display:flex;gap:8px;align-items:flex-start;padding:3px 0;font-size:13px}
+label.det small{color:var(--muted);display:block}
+.work{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-height:0}
+.pane{display:flex;flex-direction:column;min-height:0}
+.pane textarea{flex:1;min-height:200px}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:600}
+.sec{background:transparent;color:var(--text);border:1px solid var(--border)}
+.status{border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:13px;display:none}
+.status.ok{display:block;background:var(--okbg);color:var(--ok)}
+.status.bad{display:block;background:var(--badbg);color:var(--bad)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.chip{background:var(--chip);border-radius:999px;padding:2px 10px;font-size:12px}
+.muted{color:var(--muted);font-size:12px}
+.hidden{display:none!important}
+@media (max-width:900px){main{grid-template-columns:1fr;height:auto}.work{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>PromptSafe</h1><span class="ver">v__VERSION__</span>
+  <span class="sp"></span>
+  <div class="tabs"><button id="tabRedact" class="on">Redact</button><button id="tabRestore">Restore</button></div>
+  <button class="btn sec" id="quit" title="Stop PromptSafe">Quit</button>
+</header>
+<main>
+  <aside>
+    <section>
+      <h2>Sensitive words</h2>
+      <textarea id="terms" placeholder="One per line. Optional label:&#10;Acme Corp => COMPANY&#10;johndoe => USER"></textarea>
+      <div class="muted">Case-insensitive. Also matched inside longer words.</div>
+    </section>
+    <section>
+      <h2>Placeholder format</h2>
+      <input type="text" id="format" value="{LABEL}_{N}">
+      <div class="muted">{LABEL}_{N} gives IP_1, {label}{N} gives ip1.</div>
+    </section>
+    <section>
+      <h2>Built-in detectors</h2>
+      <div id="dets"></div>
+    </section>
+  </aside>
+
+  <div class="work" id="redactView">
+    <div class="pane">
+      <h2>Input (logs, config, text)</h2>
+      <textarea id="input" spellcheck="false" placeholder="Paste text here, or drop a file"></textarea>
+      <div class="row">
+        <button class="btn" id="go">Redact</button>
+        <button class="btn sec" id="checkBtn">Check only</button>
+        <label class="btn sec" style="font-weight:400">Open file<input type="file" id="file" class="hidden"></label>
+      </div>
+    </div>
+    <div class="pane">
+      <h2>Safe output (send this to the AI)</h2>
+      <div id="status" class="status"></div>
+      <div id="chips" class="chips"></div>
+      <textarea id="output" spellcheck="false" readonly></textarea>
+      <div class="row">
+        <button class="btn" id="copy">Copy</button>
+        <button class="btn sec" id="save">Save .txt</button>
+        <button class="btn sec" id="dlmap">Download mapping</button>
+        <button class="btn sec" id="reset">New session</button>
+        <span class="muted" id="mapinfo"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="work hidden" id="restoreView">
+    <div class="pane">
+      <h2>AI answer (with placeholders)</h2>
+      <textarea id="rin" spellcheck="false" placeholder="Paste the AI's answer here"></textarea>
+      <div class="row"><button class="btn" id="rgo">Restore originals</button></div>
+    </div>
+    <div class="pane">
+      <h2>Restored (stays on this computer)</h2>
+      <textarea id="rout" spellcheck="false" readonly></textarea>
+      <div class="row"><button class="btn" id="rcopy">Copy</button><span class="muted">Uses the mapping from this session.</span></div>
+    </div>
+  </div>
+</main>
+<script>
+const TOKEN = "__TOKEN__";
+const $ = id => document.getElementById(id);
+async function api(path, body) {
+  const r = await fetch(path, {method: body ? "POST" : "GET", headers: {"X-PromptSafe-Token": TOKEN, "Content-Type": "application/json"}, body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({error: "HTTP " + r.status}));
+  if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+  return j;
+}
+const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+async function loadDetectors() {
+  const saved = JSON.parse(store.get("ps.disabled") || "null");
+  const dets = await api("/api/detectors");
+  $("dets").innerHTML = "";
+  for (const d of dets) {
+    const on = saved ? !saved.includes(d.ID) : d.Default;
+    const l = document.createElement("label"); l.className = "det";
+    l.innerHTML = `<input type="checkbox" data-id="${d.ID}" ${on ? "checked" : ""}><span>${d.ID} <small></small></span>`;
+    l.querySelector("small").textContent = d.Description;
+    $("dets").appendChild(l);
+  }
+  $("dets").addEventListener("change", () => store.set("ps.disabled", JSON.stringify(disabled())));
+}
+function disabled() { return [...document.querySelectorAll("#dets input")].filter(i => !i.checked).map(i => i.dataset.id); }
+function req(text) { return {text, terms: $("terms").value, disabled: disabled(), format: $("format").value.trim()}; }
+
+function showStatus(ok, html) { const s = $("status"); s.className = "status " + (ok ? "ok" : "bad"); s.innerHTML = html; }
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function leakList(leaks) { return "<ul style='margin:6px 0 0 18px;padding:0'>" + leaks.slice(0, 20).map(l => `<li>line ${l.line}: ${esc(l.reason)} (${esc(l.hint)})</li>`).join("") + "</ul>"; }
+
+$("go").onclick = async () => {
+  try {
+    const j = await api("/api/redact", req($("input").value));
+    const res = j.result;
+    $("chips").innerHTML = Object.entries(res.counts || {}).sort().map(([k, v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join("");
+    if (j.safe) {
+      $("output").value = res.output;
+      showStatus(true, `Safe. ${(res.findings || []).length} replacement(s), final check passed.`);
+    } else {
+      $("output").value = "";
+      showStatus(false, "<b>Blocked.</b> Sensitive data would still be exposed:" + leakList(res.leaks));
+    }
+    $("mapinfo").textContent = j.mappingSize + " value(s) in mapping";
+  } catch (e) { showStatus(false, esc(e.message)); }
+};
+$("checkBtn").onclick = async () => {
+  try {
+    const j = await api("/api/check", req($("input").value));
+    const leaks = j.leaks || [];
+    $("chips").innerHTML = ""; $("output").value = "";
+    showStatus(leaks.length === 0, leaks.length ? `<b>${leaks.length} sensitive item(s) found.</b>` + leakList(leaks) : "No sensitive data found.");
+  } catch (e) { showStatus(false, esc(e.message)); }
+};
+$("copy").onclick = () => navigator.clipboard.writeText($("output").value);
+$("rcopy").onclick = () => navigator.clipboard.writeText($("rout").value);
+function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); }
+$("save").onclick = () => download("redacted.txt", $("output").value, "text/plain");
+$("dlmap").onclick = async () => download("promptsafe-mapping.json", JSON.stringify(await api("/api/mapping"), null, 2), "application/json");
+$("reset").onclick = async () => { await api("/api/reset", {}); $("output").value = ""; $("chips").innerHTML = ""; $("status").className = "status"; $("mapinfo").textContent = "New session, mapping cleared"; };
+$("rgo").onclick = async () => { $("rout").value = (await api("/api/restore", {text: $("rin").value})).output; };
+$("quit").onclick = async () => { await api("/api/quit", {}).catch(() => {}); document.body.innerHTML = "<p style='padding:20px'>PromptSafe stopped. You can close this tab.</p>"; };
+
+function readFile(f) { const r = new FileReader(); r.onload = () => { $("input").value = r.result; }; r.readAsText(f); }
+$("file").onchange = e => e.target.files[0] && readFile(e.target.files[0]);
+$("input").addEventListener("dragover", e => e.preventDefault());
+$("input").addEventListener("drop", e => { e.preventDefault(); e.dataTransfer.files[0] && readFile(e.dataTransfer.files[0]); });
+
+for (const [btn, show, hide] of [["tabRedact", "redactView", "restoreView"], ["tabRestore", "restoreView", "redactView"]]) {
+  $(btn).onclick = () => { $(show).classList.remove("hidden"); $(hide).classList.add("hidden"); document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.id === btn)); };
+}
+$("format").value = store.get("ps.format") || "{LABEL}_{N}";
+$("format").addEventListener("input", () => store.set("ps.format", $("format").value));
+loadDetectors();
+</script>
+</body>
+</html>

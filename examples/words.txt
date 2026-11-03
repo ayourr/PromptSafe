@@ -1,0 +1,5 @@
+# One sensitive word or phrase per line.
+# Optionally give it a label:  word => LABEL
+# Matching is case-insensitive and also catches the word inside longer words.
+johndoe => USER
+s3cr3t-db-name => DATABASE
