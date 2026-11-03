@@ -9,13 +9,38 @@ file lets you put the real values back into the AI's answer.
 It is a single binary with no dependencies, for Linux and Windows, with a CLI
 and a GUI. Everything runs locally; nothing is sent anywhere.
 
+## Install
+
+**Linux** (x86_64 or ARM64):
+
+```sh
+curl -fsSL https://github.com/ayourr/PromptSafe/releases/latest/download/install.sh | sh
+```
+
+**Windows** (PowerShell):
+
+```powershell
+irm https://github.com/ayourr/PromptSafe/releases/latest/download/install.ps1 | iex
+```
+
+Both scripts download the binary from the latest
+[GitHub Release](https://github.com/ayourr/PromptSafe/releases/latest), check its
+SHA-256 against `checksums.txt`, and put `promptsafe` on your PATH
+(`/usr/local/bin` or `~/.local/bin` on Linux, `%LOCALAPPDATA%\Programs\PromptSafe`
+on Windows). You can also download the file for your system from the
+[Releases page](https://github.com/ayourr/PromptSafe/releases/latest) and run it
+directly; on Linux, `chmod +x` it first.
+
+To publish a new release, push a version tag: `git tag v0.3.0 && git push origin v0.3.0`.
+The release workflow tests, builds and uploads the binaries.
+
 ## Quick start
 
 ```sh
-make build                     # or: go build -o bin/promptsafe ./cmd/promptsafe
-./bin/promptsafe redact app.log > safe.txt
-cat app.log | ./bin/promptsafe redact -t "Acme Corp=>COMPANY" --report
-./bin/promptsafe gui           # opens the GUI in your browser
+promptsafe redact app.log > safe.txt
+cat app.log | promptsafe redact -t "Acme Corp=>COMPANY" --report
+promptsafe gui                 # opens the GUI in your browser
+# from source: make build && ./bin/promptsafe ...
 ```
 
 Example:
