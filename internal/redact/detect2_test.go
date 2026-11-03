@@ -43,6 +43,7 @@ func TestKeywordNonSecrets(t *testing.T) {
 		"monkey=banana keyboard=qwerty bypass=yesyes passage=long",
 		"password: ********",
 		"password=${DB_PASS}",
+		"(auth:SIMPLE) ok",
 	} {
 		if got := mustRedact(t, nil, in).Output; got != in {
 			t.Errorf("changed %q -> %q", in, got)
