@@ -133,11 +133,20 @@ If any of these is found, the output is blocked (CLI exit code 2, GUI shows
 
 ## GUI
 
-`promptsafe gui` serves a local page on `127.0.0.1` with a random port and a
-random per-launch token, and opens your browser. It refuses requests without
-the token or for other host names. Paste or drop a file, add your words, pick
-detectors, then copy the safe output. The Restore tab puts the originals back
-into the AI's answer using the session's mapping.
+`promptsafe gui` serves a page at `http://127.0.0.1:19951` and opens your
+browser. Paste or drop a file, add your words, pick detectors, then copy the
+safe output. The Restore tab puts the originals back into the AI's answer
+using the session's mapping. **Quit** stops it (or Ctrl+C in the terminal).
+
+- It only listens on `127.0.0.1`, so other computers cannot reach it, and it
+  refuses requests for any other host name.
+- The page's actions need a random per-launch token that is only inside the
+  page, so other websites you visit cannot use it.
+- `--port 8080` picks another port (`--port 0` = any free port). If 19951 is
+  busy, another free port is used and printed.
+- `--strict` also requires the secret link printed in the terminal to open the
+  page, for machines shared with other users.
+- `--no-browser` does not open the browser.
 
 ## Building
 

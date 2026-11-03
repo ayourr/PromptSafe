@@ -302,12 +302,17 @@ func runCheck(args []string) (int, error) {
 	return 2, nil
 }
 
+// defaultGUIPort is fixed so the GUI is always at http://127.0.0.1:19951.
+const defaultGUIPort = 19951
+
 func runGUI(args []string) error {
 	fs := flag.NewFlagSet("gui", flag.ExitOnError)
 	var c common
 	c.register(fs)
-	addr := fs.String("addr", "127.0.0.1:0", "address to listen on (keep it on localhost)")
+	port := fs.Int("port", defaultGUIPort, "port to listen on, on 127.0.0.1 only (0 = any free port)")
+	addr := fs.String("addr", "", "full listen address, overrides -port (keep it on localhost)")
 	noBrowser := fs.Bool("no-browser", false, "do not open the browser automatically")
+	strict := fs.Bool("strict", false, "require the secret link printed at start (for shared machines)")
 	fs.Parse(args)
 	build := func(extraTerms string, disabled []string, format string) (*redact.Redactor, error) {
 		cc := c
@@ -319,7 +324,14 @@ func runGUI(args []string) error {
 		cc.mapping = ""
 		return cc.build()
 	}
-	return gui.Serve(gui.Options{Addr: *addr, OpenBrowser: !*noBrowser, Build: build, MappingPath: c.mapping, Version: version})
+	listen, fallback := *addr, ""
+	if listen == "" {
+		listen = fmt.Sprintf("127.0.0.1:%d", *port)
+		if *port == defaultGUIPort {
+			fallback = "127.0.0.1:0"
+		}
+	}
+	return gui.Serve(gui.Options{Addr: listen, FallbackAddr: fallback, Strict: *strict, OpenBrowser: !*noBrowser, Build: build, MappingPath: c.mapping, Version: version})
 }
 
 func runInit(args []string) error {

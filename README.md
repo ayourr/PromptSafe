@@ -29,22 +29,25 @@ Or download the file for your system from the
 
 ## Use
 
+### In your browser (easiest)
+
 ```sh
-promptsafe redact app.log > safe.txt     # clean a file, then paste safe.txt into the AI
-promptsafe gui                           # same thing in a window (opens in your browser)
+promptsafe gui
 ```
 
-Add your own sensitive words (company, project, people), one per line:
+Your browser opens **http://127.0.0.1:19951**. Paste your logs or text on the
+left, click **Redact**, and copy the safe output on the right. The page only
+runs on your own computer; nothing is sent anywhere.
+
+![PromptSafe in the browser](docs/gui.png)
+
+### In the terminal
 
 ```sh
-promptsafe redact -w words.txt app.log > safe.txt
-```
-
-Get the real values back in the AI's answer:
-
-```sh
+promptsafe redact app.log > safe.txt          # clean a file
+promptsafe redact -w words.txt app.log        # also hide your own words (one per line)
 promptsafe redact -m map.json app.log > safe.txt
-promptsafe restore -m map.json answer.txt
+promptsafe restore -m map.json answer.txt     # put the real values back into the AI's answer
 ```
 
 If anything sensitive is still left, PromptSafe blocks the output instead of

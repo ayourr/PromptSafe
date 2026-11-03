@@ -29,7 +29,12 @@ var indexHTML string
 type BuildFunc func(extraTerms string, disabled []string, format string) (*redact.Redactor, error)
 
 type Options struct {
-	Addr        string
+	Addr string
+	// FallbackAddr is tried when Addr is busy (e.g. the default port is taken).
+	FallbackAddr string
+	// Strict requires the per-launch token in the page URL too, so other
+	// users of the same machine cannot open the page.
+	Strict      bool
 	OpenBrowser bool
 	Build       BuildFunc
 	MappingPath string // optional: load at start, save after each redaction
@@ -67,10 +72,17 @@ func Serve(opts Options) error {
 	}
 
 	ln, err := net.Listen("tcp", opts.Addr)
+	if err != nil && opts.FallbackAddr != "" {
+		fmt.Fprintf(os.Stderr, "%s is busy, using another port\n", opts.Addr)
+		ln, err = net.Listen("tcp", opts.FallbackAddr)
+	}
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("http://%s/?t=%s", ln.Addr().String(), s.token)
+	url := fmt.Sprintf("http://%s/", ln.Addr().String())
+	if opts.Strict {
+		url += "?t=" + s.token
+	}
 	fmt.Fprintf(os.Stderr, "PromptSafe GUI running at:\n  %s\nPress Ctrl+C (or Quit in the page) to stop.\n", url)
 	if opts.OpenBrowser {
 		if err := openBrowser(url); err != nil {
@@ -124,7 +136,7 @@ func (s *server) tokenOK(got string) bool {
 }
 
 func (s *server) index(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" || !s.tokenOK(r.URL.Query().Get("t")) {
+	if r.URL.Path != "/" || (s.opts.Strict && !s.tokenOK(r.URL.Query().Get("t"))) {
 		http.Error(w, "forbidden: open the link printed in the terminal", http.StatusForbidden)
 		return
 	}
