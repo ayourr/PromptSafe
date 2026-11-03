@@ -30,6 +30,9 @@ type Config struct {
 	TermsFiles        []string        `json:"terms_files,omitempty"`
 	Patterns          []Pattern       `json:"patterns,omitempty"`
 	InternalDomains   []string        `json:"internal_domains,omitempty"`
+	// Keywords are extra words whose following value is redacted, as in
+	// "sec: value" or "codeword=value". Entries may be "word => LABEL".
+	Keywords []string `json:"keywords,omitempty"`
 	// Allow lists values that must never be redacted (e.g. 127.0.0.1).
 	Allow []string `json:"allow,omitempty"`
 
@@ -110,7 +113,7 @@ const SampleConfig = `{
   "placeholder_format": "{LABEL}_{N}",
   "detectors": {
     "uuid": false,
-    "phone": false
+    "person_name": true
   },
   "terms": [
     { "value": "Acme Corp", "label": "COMPANY" },
@@ -121,6 +124,7 @@ const SampleConfig = `{
     { "regex": "EMP-\\d{6}", "label": "EMPLOYEE_ID" }
   ],
   "internal_domains": ["acme.com", "acme.lan"],
+  "keywords": ["codeword", "vault_pin => PIN"],
   "allow": ["127.0.0.1", "0.0.0.0", "localhost"]
 }
 `

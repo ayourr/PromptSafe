@@ -79,6 +79,7 @@ type common struct {
 	config  string
 	words   listFlag
 	terms   listFlag
+	keys    listFlag
 	enable  string
 	disable string
 	format  string
@@ -89,6 +90,7 @@ func (c *common) register(fs *flag.FlagSet) {
 	fs.StringVar(&c.config, "c", "", "config file (default: $PROMPTSAFE_CONFIG or the user config dir)")
 	fs.Var(&c.words, "w", "words file, one sensitive word per line (repeatable)")
 	fs.Var(&c.terms, "t", `sensitive word, optionally "word=>LABEL" (repeatable)`)
+	fs.Var(&c.keys, "k", `extra keyword whose value is redacted, e.g. "sec" for "sec: x" (repeatable, comma-separated)`)
 	fs.StringVar(&c.enable, "enable", "", "comma-separated detectors to turn on")
 	fs.StringVar(&c.disable, "disable", "", "comma-separated detectors to turn off")
 	fs.StringVar(&c.format, "format", "", `placeholder format, e.g. "{LABEL}_{N}" or "{label}{N}"`)
@@ -129,6 +131,9 @@ func (c *common) build() (*redact.Redactor, error) {
 	}
 	for _, t := range c.terms {
 		cfg.Terms = append(cfg.Terms, redact.ParseTermsText(t)...)
+	}
+	for _, k := range c.keys {
+		cfg.Keywords = append(cfg.Keywords, splitList(k)...)
 	}
 	if cfg.Detectors == nil {
 		cfg.Detectors = map[string]bool{}

@@ -48,7 +48,8 @@ Common flags for `redact`, `check` and `gui`:
 - `-w words.txt` file of sensitive words, one per line, optionally `word => LABEL` (repeatable)
 - `-t "word=>LABEL"` one sensitive word (repeatable)
 - `-m mapping.json` load this mapping if it exists and save it after redacting
-- `--enable uuid,phone` / `--disable high_entropy` turn detectors on or off
+- `-k sec,codeword` adds keywords whose following value is redacted
+- `--enable uuid` / `--disable high_entropy,person_name` turn detectors on or off
 - `--format "{label}{N}"` placeholder style (`{LABEL}_{N}` gives `IP_1`, `{label}{N}` gives `ip1`)
 - `redact` only: `-o file`, `--report` (summary on stderr), `--json`
 
@@ -65,14 +66,34 @@ permissions. Keep it local and delete it when you are done.
 
 ## Built-in detectors
 
-On by default: private keys (PEM), JWTs, API keys (AWS, GitHub, Slack, Google,
-Stripe, OpenAI, Anthropic), credentials in URLs, Authorization headers,
-`password=` / `secret=` / `token=` / `user=` style values (configs, JSON,
-connection strings), emails, IPv4, IPv6, MAC addresses, internal hostnames
-(`.local`, `.internal`, `.corp`, `.lan`, `.intranet`), usernames in home paths,
-card numbers (Luhn-checked), and long random-looking strings (keys, hashes).
+On by default:
 
-Off by default: UUIDs, phone numbers.
+- **Secrets with a known format:** PEM private keys, JWTs, password hashes
+  (bcrypt, `$6$`, argon2, NTLM), and 50+ token formats with a fixed prefix
+  (AWS, GitHub, GitLab, Slack, Google, Stripe, OpenAI, Anthropic, npm, PyPI,
+  Hugging Face, DigitalOcean, Shopify, Vault, Docker Hub, SendGrid, Twilio,
+  Telegram, Atlassian, Grafana, Azure and more), Slack/Discord/Teams webhooks.
+- **Values after a keyword,** whatever they look like: `sec: x`, `pwd=x`,
+  `pass x1!`, `DB_PASSWORD=x`, `"clientSecret": "x"`, `X-Api-Key: x`,
+  `--token x`, `<password>x</password>`, `pin: 1234`, `mot_de_passe: x`.
+  The keyword can be any part of the key (`_`, `.`, `-` or camelCase), and
+  `:`, `=`, `=>` or a space separate it from the value. With only a space,
+  the value must look like a password (6+ characters with a digit or symbol),
+  so prose like "password reset" is left alone. Add your own keywords with
+  `keywords` in the config or `-k`.
+- **Passwords on command lines:** `mysql -pX`, `sshpass -p X`, `smbclient`, `net use`.
+- Credentials in URLs, Authorization headers, `user=` values.
+- **Personal data:** emails, phone numbers (`+` international, or any format
+  after phone/tel/mobile/fax/GSM), IBANs (checksum-verified), card numbers
+  (Luhn-checked), and **people's names**: a built-in list of ~600 common first
+  names from many languages (with the surname that follows), any name after
+  Mr/Mrs/Dr/Mme/M., and capitalised values of keys like `name:`, `customer:`,
+  `author=`.
+- **Infrastructure:** IPv4, IPv6, MAC addresses, internal hostnames
+  (`.local`, `.internal`, `.corp`, `.lan`, `.intranet`), usernames in home paths.
+- Long random-looking strings (keys, hashes) found by their entropy.
+
+Off by default: UUIDs.
 
 Your own words always win over built-in detectors. A value found once (for
 example a password in `password=...`) is also replaced everywhere else it
@@ -83,11 +104,12 @@ appears in the text.
 ```json
 {
   "placeholder_format": "{LABEL}_{N}",
-  "detectors": { "uuid": false, "phone": false },
+  "detectors": { "uuid": false },
   "terms": [ { "value": "Acme Corp", "label": "COMPANY" } ],
   "terms_files": ["words.txt"],
   "patterns": [ { "regex": "EMP-\\d{6}", "label": "EMPLOYEE_ID" } ],
   "internal_domains": ["acme.com", "acme.lan"],
+  "keywords": ["codeword", "vault_pin => PIN"],
   "allow": ["127.0.0.1", "localhost"]
 }
 ```
@@ -95,6 +117,8 @@ appears in the text.
 - `terms` are matched case-insensitively, also inside longer words.
 - `patterns` are Go regular expressions; if one has a capture group, only group 1 is replaced.
 - `internal_domains` redacts the domain and all its subdomains as `HOST_n`.
+- `keywords` are extra words whose following value is redacted, e.g. `"sec"`
+  catches `sec: x`. Use `"word => LABEL"` to pick the placeholder label.
 - `allow` lists values that are never redacted.
 
 ## The leak check
@@ -127,7 +151,17 @@ Requires Go 1.22+. No cgo, no third-party modules.
 
 ## Limits
 
-Pattern-based detection cannot know every secret format. Names of people and
-free-text personal data are only caught if you list them as words. Add
-anything specific to your organisation to `words.txt` or `patterns`, and use
-`check` on the output when in doubt.
+Everything runs offline, so detection is rules, checksums, entropy and word
+lists, not an AI model. What that means in practice:
+
+- A secret with no known format, no keyword before it and low randomness
+  (for example `Summer2024` alone in a sentence) is not found.
+- Names are found from the built-in first-name list, titles and `name:`-style
+  keys. A surname on its own, or a rare first name in free text, is not.
+  Add those to `words.txt`.
+- Some false positives are expected (a city that is also a first name, a
+  `key=` value that was not secret). That is the safe direction; use `allow`
+  or `--disable` for the ones that bother you.
+
+Put anything specific to your organisation in `words.txt`, `keywords` or
+`patterns`, and run `check` on the output when in doubt.

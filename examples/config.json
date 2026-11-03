@@ -1,8 +1,7 @@
 {
   "placeholder_format": "{LABEL}_{N}",
   "detectors": {
-    "uuid": false,
-    "phone": false
+    "uuid": false
   },
   "terms": [
     { "value": "Acme Corp", "label": "COMPANY" },
@@ -13,5 +12,6 @@
     { "regex": "EMP-\\d{6}", "label": "EMPLOYEE_ID" }
   ],
   "internal_domains": ["acme.com", "acme.lan"],
+  "keywords": ["codeword", "vault_pin => PIN"],
   "allow": ["127.0.0.1", "0.0.0.0", "localhost"]
 }

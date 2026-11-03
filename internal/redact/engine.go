@@ -112,6 +112,25 @@ func New(cfg *Config, mapping *Mapping) (*Redactor, error) {
 		}
 	}
 
+	// User keywords: "codeword: value" redacts value.
+	kwByLabel := map[string][]string{}
+	var kwLabels []string
+	for _, k := range cfg.Keywords {
+		t := ParseTermsText(k)
+		if len(t) == 0 {
+			continue
+		}
+		l := sanitizeLabel(orDefault(t[0].Label, "SECRET"))
+		if _, ok := kwByLabel[l]; !ok {
+			kwLabels = append(kwLabels, l)
+		}
+		kwByLabel[l] = append(kwByLabel[l], t[0].Value)
+	}
+	for _, l := range kwLabels {
+		d := keywordDetector("keyword", l, "", kwByLabel[l], 104, true)
+		r.detectors = append(r.detectors, d)
+	}
+
 	// User terms: one detector per label, longest terms first.
 	byLabel := map[string][]string{}
 	var labels []string
@@ -176,6 +195,12 @@ func (r *Redactor) scan(text string) []span {
 		spans = append(spans, span{start: s, end: e, label: label, key: norm, detector: d.ID, prio: d.Priority})
 	}
 	for _, d := range r.detectors {
+		if d.Find != nil {
+			for _, h := range d.Find(text) {
+				add(d, h.Start, h.End, orDefault(h.Label, d.Label))
+			}
+			continue
+		}
 		for _, m := range d.Re.FindAllStringSubmatchIndex(text, -1) {
 			switch {
 			case len(d.GroupLabels) > 0:
