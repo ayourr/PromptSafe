@@ -1,14 +1,15 @@
 name: release
 
-# Push a version tag (git tag v0.2.0 && git push origin v0.2.0) to build the
-# binaries and publish them as a GitHub Release.
+# Publish a GitHub Release with the binaries, either by pushing a version tag
+# (git tag v0.2.0 && git push origin v0.2.0) or from the Actions tab
+# ("Run workflow" with a version): the tag is then created on the chosen branch.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to (re)publish, e.g. v0.2.0"
+        description: "Version to publish, e.g. v0.2.0 (created on the selected branch if new)"
         required: true
 
 permissions:
@@ -21,8 +22,6 @@ jobs:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - uses: actions/setup-go@v5
         with:
@@ -54,5 +53,5 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/* --clobber
           else
-            gh release create "$TAG" dist/* --title "PromptSafe $TAG" --generate-notes
+            gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "PromptSafe $TAG" --generate-notes
           fi
