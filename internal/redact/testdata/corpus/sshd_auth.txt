@@ -1,0 +1,26 @@
+# /var/log/auth.log as pasted in fail2ban and "someone is brute forcing my server" questions.
+=== input
+Mar  3 04:12:09 web-prod-01 sshd[24200]: reverse mapping checking getaddrinfo for host-203-0-113-45.isp.example.net [203.0.113.45] failed - POSSIBLE BREAK-IN ATTEMPT!
+Mar  3 04:12:09 web-prod-01 sshd[24200]: Invalid user deploybot from 203.0.113.45 port 52144
+Mar  3 04:12:11 web-prod-01 sshd[24200]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=203.0.113.45  user=sshd
+Mar  3 04:12:13 web-prod-01 sshd[24200]: Failed password for invalid user deploybot from 203.0.113.45 port 52144 ssh2
+Mar  3 04:15:40 web-prod-01 sshd[24311]: Accepted publickey for kmorales from 198.51.100.23 port 60211 ssh2: RSA SHA256:Qm9vZ2xlIGRvZXMgbm90IGtub3cgdGhpcyBrZXk
+Mar  3 04:15:40 web-prod-01 sshd[24311]: pam_unix(sshd:session): session opened for user kmorales(uid=1001) by (uid=0)
+Mar  3 04:16:02 web-prod-01 sudo:  kmorales : TTY=pts/0 ; PWD=/home/kmorales ; USER=root ; COMMAND=/usr/bin/systemctl restart nginx
+Mar  3 04:16:30 web-prod-01 su[24400]: pam_unix(su:session): session opened for user postgres by kmorales(uid=1001)
+Mar  3 04:20:01 web-prod-01 CRON[24500]: pam_unix(cron:session): session closed for user root
+Mar  3 04:21:10 web-prod-01 sshd[24311]: Disconnected from user kmorales 198.51.100.23 port 60211
+=== secrets
+web-prod-01
+203.0.113.45
+203-0-113-45
+deploybot
+kmorales
+198.51.100.23
+=== keep
+sshd[24200]
+pam_unix(sshd:auth)
+POSSIBLE BREAK-IN ATTEMPT
+/usr/bin/systemctl restart nginx
+CRON[24500]
+port 52144

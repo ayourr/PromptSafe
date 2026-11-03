@@ -1,0 +1,25 @@
+# nginx access/error logs from "502 bad gateway" and "why is my API slow" posts.
+=== input
+198.51.100.77 - - [12/Oct/2026:13:55:36 +0000] "GET /api/v2/orders?customer=4821&access_token=ya29.a0AfB_byC3x9Qm2LpT7 HTTP/1.1" 200 5123 "https://portal.northwind-trading.com/dashboard" "Mozilla/5.0 (X11; Linux x86_64)" "203.0.113.9, 10.20.0.14"
+198.51.100.77 - jsmith [12/Oct/2026:13:55:37 +0000] "POST /login;jsessionid=8F3A2B1C9D0E7F6A HTTP/1.1" 302 0 "-" "curl/8.5.0"
+2026/10/12 13:55:38 [error] 1234#1234: *5678 connect() failed (111: Connection refused) while connecting to upstream, client: 198.51.100.77, server: api.northwind-trading.com, request: "GET /health HTTP/1.1", upstream: "http://10.20.0.31:8080/health", host: "api.northwind-trading.com"
+2026/10/12 13:55:39 [warn] 1234#1234: *5679 upstream server temporarily disabled while reading response header from upstream, upstream: "http://app-backend-02:8080/"
+GET https://files.northwind-trading.com/report.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAEXAMPLEEXAMPLE12%2F20261012%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20261012T135540Z&X-Amz-Expires=3600&X-Amz-Signature=5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7
+=== secrets
+198.51.100.77
+ya29.a0AfB_byC3x9Qm2LpT7
+northwind-trading.com
+203.0.113.9
+10.20.0.14
+10.20.0.31
+jsmith
+8F3A2B1C9D0E7F6A
+app-backend-02
+AKIAEXAMPLEEXAMPLE12
+5d672d79c15b13162d9279b0855cfba6789a8edb4c82c400e06b5924a6f2b5d7
+=== keep
+GET /api/v2/orders
+connect() failed (111: Connection refused)
+Mozilla/5.0 (X11; Linux x86_64)
+curl/8.5.0
+X-Amz-Algorithm=AWS4-HMAC-SHA256

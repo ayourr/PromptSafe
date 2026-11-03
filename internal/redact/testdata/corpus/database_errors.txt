@@ -1,0 +1,24 @@
+# MySQL, PostgreSQL, JDBC and Mongo errors from "can't connect to database" posts.
+=== input
+ERROR 1045 (28000): Access denied for user 'app_rw'@'10.0.4.22' (using password: YES)
+2026-10-12 10:01:02.123 UTC [4242] FATAL:  password authentication failed for user "reporting_svc"
+2026-10-12 10:01:02.123 UTC [4242] DETAIL:  Connection matched pg_hba.conf line 99: "host all all 0.0.0.0/0 md5"
+psql: error: connection to server at "pg-main.c9akciq32.eu-west-1.rds.amazonaws.com" (172.31.20.5), port 5432 failed
+Caused by: java.sql.SQLException: Cannot create PoolableConnectionFactory (jdbc:mysql://db-replica-3:3306/shop?user=shop_admin&password=Tr0ub4dor&3)
+pymongo.errors.ServerSelectionTimeoutError: cluster0-shard-00-01.ab1cd.mongodb.net:27017: timed out
+=== secrets
+app_rw
+10.0.4.22
+reporting_svc
+pg-main.c9akciq32.eu-west-1.rds.amazonaws.com
+172.31.20.5
+db-replica-3
+shop_admin
+Tr0ub4dor
+cluster0-shard-00-01.ab1cd.mongodb.net
+=== keep
+ERROR 1045 (28000): Access denied for user
+FATAL:  password authentication failed for user
+java.sql.SQLException
+pymongo.errors.ServerSelectionTimeoutError
+port 5432 failed

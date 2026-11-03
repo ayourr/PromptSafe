@@ -1,0 +1,21 @@
+# macOS and Linux syslog headers, in the loghub Mac/Linux format.
+=== input
+Jul  1 09:00:55 jdoe-macbook-pro kernel[0]: AirPort_Brcm43xx::syncPowerState: WWEN[enabled]
+Jul  1 09:01:05 jdoe-macbook-pro com.apple.CDScheduler[43]: Thermal pressure state: 1 Memory pressure state: 0
+Jul  1 09:02:26 calvisitor-10-105-160-95 kernel[0]: IOThunderboltSwitch<0>(0x0)::listenerCallback - Thunderbolt HPD packet
+Jul  1 09:03:11 jdoe-macbook-pro mDNSResponder[91]: mDNS_Register_internal: Registering jdoe-macbook-pro.local. (Addr) 192.168.1.42
+Jun 14 15:16:01 combo sshd(pam_unix)[19939]: authentication failure; logname= uid=0 euid=0 tty=NODEVssh ruser= rhost=dsl-198-51-100-201.example-isp.net  user=root
+2026-10-12T10:01:02.123456+02:00 nas-livingroom systemd[1]: Started Daily apt download activities.
+=== secrets
+jdoe-macbook-pro
+10-105-160-95
+192.168.1.42
+combo
+198-51-100-201
+nas-livingroom
+=== keep
+AirPort_Brcm43xx::syncPowerState
+IOThunderboltSwitch<0>(0x0)::listenerCallback
+com.apple.CDScheduler[43]
+sshd(pam_unix)[19939]
+Started Daily apt download activities.

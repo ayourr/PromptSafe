@@ -61,7 +61,7 @@ var apiKeyPattern = `\b(?:` + strings.Join([]string{
 
 // BuiltinDetectors returns the detectors shipped with PromptSafe.
 func BuiltinDetectors() []*Detector {
-	return []*Detector{
+	return append([]*Detector{
 		{
 			ID: "private_key", Description: "PEM private key blocks", Label: "PRIVATE_KEY",
 			Re:       regexp.MustCompile(`(?s)-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?-----END [A-Z0-9 ]*PRIVATE KEY-----`),
@@ -109,7 +109,7 @@ func BuiltinDetectors() []*Detector {
 		keywordDetector("secret_kv", "SECRET", "Values after secret words: sec:, secret=, token, key, auth, cred, clientSecret, X-Api-Key:", SecretKeywords, 79, false),
 		{
 			ID: "user_kv", Description: "user=..., username: ..., login=... values", Label: "USER",
-			Re:       regexp.MustCompile(`(?i)\b(?:user(?:name)?|login|uid|user[ _]id|account)\b["']?\s*[:=]\s*["']?([^\s"',;&}]+)`),
+			Re:       regexp.MustCompile(`(?i)\b(?:user(?:name)?|login|user[ _]id|account)\b["']?\s*[:=]\s*["']?([^\s"',;&})\]]+)`),
 			Group:    1,
 			Priority: 60, Default: true,
 		},
@@ -124,12 +124,14 @@ func BuiltinDetectors() []*Detector {
 			ID: "ipv4", Description: "IPv4 addresses", Label: "IP",
 			Re:       regexp.MustCompile(`\b(?:\d{1,3}\.){3}\d{1,3}\b`),
 			Validate: validIPv4,
+			Context:  notVersionNumber,
 			Priority: 65, Default: true,
 		},
 		{
 			ID: "ipv6", Description: "IPv6 addresses", Label: "IP",
 			Re:        regexp.MustCompile(`(?i)(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}`),
 			Validate:  validIPv6,
+			Context:   standalone,
 			Normalize: func(s string) string { return net.ParseIP(s).String() },
 			Priority:  65, Default: true,
 		},
@@ -154,8 +156,12 @@ func BuiltinDetectors() []*Detector {
 		},
 		{
 			ID: "credit_card", Description: "Payment card numbers (Luhn-checked)", Label: "CARD",
-			Re:        regexp.MustCompile(`\b(?:\d[ -]?){12,18}\d\b`),
-			Validate:  luhn,
+			// Contiguous digits, or groups of 4 with one consistent separator,
+			// or the 4-6-5 Amex layout. Free-form digit runs matched dates,
+			// Unix times and block IDs in real logs.
+			Re:        regexp.MustCompile(`\b(?:\d{13,19}|\d{4}(?: \d{4}){2} \d{1,7}|\d{4}(?:-\d{4}){2}-\d{1,7}|\d{4}[ -]\d{6}[ -]\d{5})\b`),
+			Validate:  validCard,
+			Context:   standaloneNumber,
 			Normalize: digitsOnly,
 			Priority:  75, Default: true,
 		},
@@ -198,7 +204,7 @@ func BuiltinDetectors() []*Detector {
 			Normalize: func(s string) string { return strings.ReplaceAll(s, " ", "") },
 			Priority:  76, Default: true,
 		},
-	}
+	}, logContextDetectors()...)
 }
 
 // notURLPassword rejects "pass@host" inside scheme://user:pass@host, which
@@ -217,11 +223,83 @@ func validIPv4(s string) bool {
 }
 
 func validIPv6(s string) bool {
-	if strings.Count(s, ":") < 2 {
-		return false
+	if strings.Count(s, ":") < 2 || strings.Trim(s, ":") == "" {
+		return false // "::" alone is almost always a C++/Rust/PHP scope operator
 	}
 	ip := net.ParseIP(s)
 	return ip != nil && strings.Contains(s, ":")
+}
+
+func isWordChar(c byte) bool {
+	return c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
+// standalone rejects matches glued to a word on either side, such as the
+// "::" in Foo::bar or AirPort_Brcm43xx::syncPowerState.
+func standalone(text string, start, end int) bool {
+	if start > 0 && isWordChar(text[start-1]) {
+		return false
+	}
+	return end >= len(text) || !isWordChar(text[end])
+}
+
+// notVersionNumber rejects dotted quads that are really versions:
+// v1.2.3.4, Version=4.0.0.0, ~~6.1.1.3, or a part of 1.2.3.4.5.
+func notVersionNumber(text string, start, end int) bool {
+	if end+1 < len(text) && text[end] == '.' && text[end+1] >= '0' && text[end+1] <= '9' {
+		return false
+	}
+	if start >= 2 && text[start-1] == '.' && text[start-2] >= '0' && text[start-2] <= '9' {
+		return false
+	}
+	if start > 0 {
+		switch text[start-1] {
+		case 'v', 'V', '~':
+			return false
+		}
+	}
+	from := start - 12
+	if from < 0 {
+		from = 0
+	}
+	before := strings.ToLower(text[from:start])
+	for _, k := range []string{"version", "ver.", "ver ", "build", "release", "firmware", "kernel",
+		"python", "java", "jdk", "ruby", "php", "perl", "gcc", "clang", "openssl", "sdk", "driver", "bios", "patch", "update"} {
+		if strings.Contains(before, k) {
+			return false
+		}
+	}
+	return true
+}
+
+// standaloneNumber rejects digit runs that are part of a longer identifier,
+// such as HDFS blk_-5078186985701364847 or 1.2345678901234567.
+func standaloneNumber(text string, start, end int) bool {
+	if start > 0 && strings.IndexByte("-_./#", text[start-1]) >= 0 {
+		return false
+	}
+	if end+1 < len(text) && strings.IndexByte(".-_", text[end]) >= 0 && text[end+1] >= '0' && text[end+1] <= '9' {
+		return false
+	}
+	return true
+}
+
+// validCard checks the Luhn sum and that the number starts like a real
+// card (Visa, Mastercard, Amex, Diners, JCB, Discover, UnionPay, Maestro).
+func validCard(s string) bool {
+	d := digitsOnly(s)
+	if len(d) < 13 || len(d) > 19 {
+		return false
+	}
+	switch {
+	case d[0] == '4', d[0] == '6',
+		d[0] == '5' && d[1] >= '1' && d[1] <= '5',
+		d[0] == '2' && d[1] >= '2' && d[1] <= '7',
+		d[0] == '3' && strings.ContainsRune("045678", rune(d[1])):
+	default:
+		return false
+	}
+	return luhn(d)
 }
 
 func digitsOnly(s string) string {

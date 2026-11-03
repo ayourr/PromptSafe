@@ -1,0 +1,20 @@
+# Python, Node and Java stack traces from GitHub issues.
+=== input
+Traceback (most recent call last):
+  File "/home/rkapoor/projects/etl/.venv/lib/python3.12/site-packages/requests/adapters.py", line 667, in send
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='etl-queue.int.globex.co', port=443): Max retries exceeded with url: /jobs?api_key=k_live_5f2a9c1e7b&limit=50
+npm ERR! path /Users/rkapoor/code/web/node_modules/esbuild
+npm ERR! A complete log of this run can be found in: C:\Users\rkapoor\AppData\Local\npm-cache\_logs\2026-10-12T10_01_02_123Z-debug-0.log
+Exception in thread "main" org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'dataSource'
+	at org.apache.hadoop.ipc.Client.call(Client.java:1475)
+	at com.globex.billing.InvoiceService.run(InvoiceService.java:88)
+=== secrets
+rkapoor
+etl-queue.int.globex.co
+k_live_5f2a9c1e7b
+=== keep
+requests/adapters.py
+org.springframework.beans.factory.BeanCreationException
+org.apache.hadoop.ipc.Client.call(Client.java:1475)
+com.globex.billing.InvoiceService.run(InvoiceService.java:88)
+node_modules/esbuild

@@ -1,0 +1,26 @@
+# curl -v / browser devtools dumps from "my API returns 401" questions.
+=== input
+*   Trying 192.0.2.15:443...
+* Connected to billing.contoso-labs.io (192.0.2.15) port 443
+> POST /v1/invoices HTTP/2
+> Host: billing.contoso-labs.io
+> User-Agent: curl/8.5.0
+> Cookie: sessionid=q8w7e6r5t4y3u2i1; csrftoken=Zx9QwErTyUiOp0Lk; theme=dark
+> X-Request-Id: 1f0c2d3e
+>
+< HTTP/2 401
+< set-cookie: refresh=rTk_77ab12cd34ef56; Path=/auth; Expires=Wed, 21 Oct 2026 07:28:00 GMT; HttpOnly; Secure; SameSite=Strict
+< www-authenticate: Bearer realm="billing", error="invalid_token"
+{"error":"invalid_token","request_cookie":"sessionid=q8w7e6r5t4y3u2i1"}
+=== secrets
+192.0.2.15
+contoso-labs.io
+q8w7e6r5t4y3u2i1
+Zx9QwErTyUiOp0Lk
+rTk_77ab12cd34ef56
+=== keep
+POST /v1/invoices HTTP/2
+HTTP/2 401
+Path=/auth
+HttpOnly
+invalid_token

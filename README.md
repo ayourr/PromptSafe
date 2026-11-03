@@ -90,7 +90,24 @@ On by default:
   Mr/Mrs/Dr/Mme/M., and capitalised values of keys like `name:`, `customer:`,
   `author=`.
 - **Infrastructure:** IPv4, IPv6, MAC addresses, internal hostnames
-  (`.local`, `.internal`, `.corp`, `.lan`, `.intranet`), usernames in home paths.
+  (`.local`, `.internal`, `.corp`, `.lan`, `.intranet`), usernames in home paths
+  (`/home/x`, `/Users/x`, `C:\Users\x`, `C:\\Users\\x`, `C:/Users/x`).
+- **Log context** (from the logs people paste when asking for help):
+  - users in sshd/PAM/sudo/su lines (`Invalid user x`, `Accepted publickey for x`,
+    `session opened for user x`, `sudo: x : TTY=`), MySQL/PostgreSQL auth errors
+    (`for user 'x'@'host'`), the user field of Apache/nginx access logs, and IAM
+    user and role-session names in AWS ARNs;
+  - hosts in syslog/journald headers, shell prompts (`alice@web01:~$`),
+    `ssh`/`scp` targets, `host=`/`Host:`/`server:` values, `name-with-dashes:port`,
+    UNC paths (`\\fileserver\share`), and IPs written with dashes inside hostnames
+    (`ip-10-0-1-23` gets the same placeholder as `10.0.1.23`);
+  - public domains (`portal.acme.com`), except well-known public sites like
+    github.com or pypi.org; Java/Android package names are left alone;
+  - Windows `DOMAIN\user`, account SIDs (`S-1-5-21-...`) and event-log fields
+    (`Account Name:`, `Account Domain:`, `Workstation Name:`);
+  - cookie values in `Cookie:` / `Set-Cookie:` headers (names and attributes kept),
+    secrets in URL query strings (`?token=`, `&sig=`, `X-Amz-Signature=`,
+    `;jsessionid=`), and AWS account IDs.
 - Long random-looking strings (keys, hashes) found by their entropy.
 
 Off by default: UUIDs.
@@ -98,6 +115,16 @@ Off by default: UUIDs.
 Your own words always win over built-in detectors. A value found once (for
 example a password in `password=...`) is also replaced everywhere else it
 appears in the text.
+System account names (`root`, `sshd`, `admin`, `postgres` ...) and short
+numbers are redacted where they are found but not spread to the rest of the
+text, so `user=sshd` does not rename the `sshd` process in every line.
+
+Detection is tested against a corpus of log samples shaped like the ones
+people post in Stack Overflow, Server Fault and GitHub issues and the public
+[loghub](https://github.com/logpai/loghub) datasets
+(`internal/redact/testdata/corpus/`, all values synthetic). Version numbers
+(`v6.1.1.3`, `Version=4.0.0.0`), C++/Rust scopes (`Foo::bar`), HDFS block IDs
+and Unix timestamps are checked to stay unchanged.
 
 ## Config file
 

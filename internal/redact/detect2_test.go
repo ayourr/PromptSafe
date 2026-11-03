@@ -44,7 +44,7 @@ func TestKeywordNonSecrets(t *testing.T) {
 		"password: ********",
 		"password=${DB_PASS}",
 		"(auth:SIMPLE) ok",
-		"sudo: x : TTY=pts/0 ; PWD=/tmp ; COMMAND=/bin/ls",
+		"TTY=pts/0 ; PWD=/tmp ; COMMAND=/bin/ls",
 		`OLDPWD=~/src PWD=C:\\work`,
 	} {
 		if got := mustRedact(t, nil, in).Output; got != in {

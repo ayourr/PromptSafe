@@ -1,0 +1,22 @@
+# AWS CLI errors and kubectl describe output from EKS/ECS troubleshooting posts.
+=== input
+An error occurred (AccessDenied) when calling the AssumeRole operation: User: arn:aws:iam::123456789012:user/ci-deployer is not authorized to perform: sts:AssumeRole on resource: arn:aws:iam::123456789012:role/eks-admin
+Error response from daemon: pull access denied for 123456789012.dkr.ecr.eu-west-3.amazonaws.com/payments-api, repository does not exist
+Events:
+  Type     Reason            Age   From               Message
+  Warning  FailedScheduling  2m    default-scheduler  0/3 nodes are available: 3 node(s) had untolerated taint
+  Normal   Scheduled         1m    default-scheduler  Successfully assigned prod/payments-api-7d9f8b6c5-x2kzq to ip-10-42-7-19.eu-west-3.compute.internal
+  Warning  Failed            1m    kubelet            Failed to pull image "123456789012.dkr.ecr.eu-west-3.amazonaws.com/payments-api:1.4.2"
+{"Account": "123456789012", "UserId": "AIDAEXAMPLEUSERID1234", "Arn": "arn:aws:sts::123456789012:assumed-role/eks-admin/jane.doe"}
+=== secrets
+ci-deployer
+jane.doe
+123456789012
+ip-10-42-7-19
+10.42.7.19
+=== keep
+AccessDenied
+sts:AssumeRole
+FailedScheduling
+default-scheduler
+payments-api-7d9f8b6c5-x2kzq

@@ -1,0 +1,37 @@
+# Windows Security event 4625 and PowerShell errors from "failed logons on my server" posts.
+=== input
+An account failed to log on.
+
+Subject:
+	Security ID:		S-1-5-18
+	Account Name:		FS01$
+	Account Domain:		NORTHWIND
+
+Account For Which Logon Failed:
+	Security ID:		S-1-5-21-3623811015-3361044348-30300820-1013
+	Account Name:		mlopez
+	Account Domain:		NORTHWIND
+
+Network Information:
+	Workstation Name:	LAPTOP-7QK2M9
+	Source Network Address:	10.1.30.44
+	Source Port:		51515
+
+Get-ChildItem : Access to the path 'C:\Users\mlopez\AppData\Local\Temp' is denied.
+whoami: NORTHWIND\mlopez
+Mapped \\fileserver02\finance$ as Z:
+Error: ENOENT: no such file or directory, open 'C:\\Users\\mlopez\\projects\\app\\.env'
+=== secrets
+FS01$
+NORTHWIND
+S-1-5-21-3623811015-3361044348-30300820-1013
+mlopez
+LAPTOP-7QK2M9
+10.1.30.44
+fileserver02
+=== keep
+An account failed to log on.
+S-1-5-18
+Source Port:		51515
+AppData\Local\Temp
+ENOENT: no such file or directory

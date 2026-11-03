@@ -1,0 +1,22 @@
+# Terminal sessions pasted into GitHub issues and forum posts.
+=== input
+alice@build-server-07:~/repos/infra$ ssh -i ~/.ssh/id_ed25519 deploy@10.8.0.12
+deploy@10.8.0.12: Permission denied (publickey).
+[alice@build-server-07 infra]$ scp backup.tar.gz ops@vault.internal:/srv/backups/
+alice@build-server-07:~$ git push https://alice:ghp_FAKEexampletoken0000000000000000000000@github.com/acme/infra.git
+remote: Support for password authentication was removed.
+alice@build-server-07:~$ cat /home/alice/.config/app/settings.yml
+=== secrets
+build-server-07
+deploy
+10.8.0.12
+vault.internal
+ghp_FAKEexampletoken0000000000000000000000
+/home/alice
+alice@
+=== keep
+Permission denied (publickey).
+backup.tar.gz
+github.com/acme/infra.git
+Support for password authentication was removed.
+.config/app/settings.yml

@@ -277,7 +277,7 @@ func propagate(text string, spans []span) []span {
 	vals := map[string]span{}
 	for _, s := range spans {
 		v := text[s.start:s.end]
-		if len(v) >= minPropagateLen {
+		if spreadable(v) {
 			if _, ok := vals[v]; !ok {
 				vals[v] = s
 			}
@@ -363,7 +363,7 @@ func (r *Redactor) Check(text string) []Leak {
 		}
 	}
 	for _, e := range r.Mapping.Entries {
-		if len(e.Value) < minPropagateLen {
+		if !spreadable(e.Value) {
 			continue
 		}
 		for i := 0; ; {
